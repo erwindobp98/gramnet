@@ -20,7 +20,7 @@ DAFTAR_AKUN = [
 # =====================================================================
 # ⚙️ PENGATURAN UTAMA GRAM NETWORK
 # =====================================================================
-START_PARAM = "424182537"  
+START_PARAM = "917401265"  
 TARGET_BOT = "Gramnetwork_bot"
 TARGET_URL = "https://app.gramnetwork.online/"
 FILE_CACHE = "gram_cache.json"  
