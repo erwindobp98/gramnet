@@ -30,8 +30,8 @@ DELAY_MIN = 5
 DELAY_MAX = 15  
 
 # API ID & Hash bawaan Telegram Android resmi
-API_ID = 6
-API_HASH = "eb06d4abfb49dc3eeb1aeb98ae0f581e"
+API_ID = 224069
+API_HASH = "f2ddfd53867f28a3b6b98e80fa010e9d"
 
 # =====================================================================
 # 🛡️ FUNGSI PEMBERSIHAN DATABASE (DARURAT)
