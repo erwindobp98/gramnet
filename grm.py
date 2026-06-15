@@ -47,15 +47,19 @@ def murnikan_tabel(cursor, nama_tabel, kolom_asli_str, buat_tabel_sql):
         jumlah_kolom_asli = len(kolom_asli_str.split(", "))  
         if "number" in kolom_sekarang or len(kolom_sekarang) != jumlah_kolom_asli:  
             try: 
+                # Diberi try-except internal agar jika kolom tidak cocok, tidak melempar eror keluar
                 cursor.execute(f"SELECT {kolom_asli_str} FROM {nama_tabel}")  
                 data_asli = cursor.fetchall()  
             except Exception: 
                 data_asli = []  
+                
             cursor.execute(f"DROP TABLE IF EXISTS {nama_tabel}")  
             cursor.execute(buat_tabel_sql)  
             if data_asli:  
                 placeholders = ", ".join(["?"] * jumlah_kolom_asli)  
-                cursor.executemany(f"INSERT INTO {nama_tabel} VALUES ({placeholders})", data_asli)  
+                try:
+                    cursor.executemany(f"INSERT INTO {nama_tabel} VALUES ({placeholders})", data_asli)  
+                except Exception: pass
     except Exception: pass
 
 def murnikan_database_telethon(nama_session):
