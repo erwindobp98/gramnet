@@ -88,19 +88,19 @@ def murnikan_database_telethon(nama_session):
 async def ambil_atau_login_telethon(nama_session, butuh_clean=False):
     if butuh_clean:
         murnikan_database_telethon(nama_session)
-        
+
     nama_file = f"{nama_session}.session"  
-    
+
     # Bersihkan file sampah sqlite
     for suffix in ["-journal", "-wal", "-shm"]:  
         try: os.remove(f"{nama_file}{suffix}")  
         except: pass  
 
     client = TelegramClient(nama_session, API_ID, API_HASH)
-    
+
     try:  
         await client.connect()
-        
+
         # ✅ DETEKSI OTOMATIS: Jika file tidak ada atau ter-log out (Invalid)
         if not await client.is_user_authorized():
             print(f"   ⚠️ [LOGIN REQUIRED] Session '{nama_session}' belum ada atau sudah INVALID!")
@@ -109,46 +109,54 @@ async def ambil_atau_login_telethon(nama_session, butuh_clean=False):
                 print("   ❌ Login dibatalkan karena nomor kosong.")
                 await client.disconnect()
                 return None
-                
+
             await client.send_code_request(phone)
             print("   📩 OTP dikirim ke akun Telegram kamu.")
             code = input("   🔑 Masukkan Kode OTP: ").strip()
-            
+
             try:
                 await client.sign_in(phone, code)
-            except Exception as e:
-                if "Password" in str(e) or "protected" in str(e).lower():
-                    password = input("   🔒 Masukkan Password 2FA (Cloud Password) kamu: ").strip()
+            except Exception as login_err:
+                # ✅ Penanganan 2FA yang lebih aman dan terisolasi
+                msg = str(login_err).lower()
+                if "password" in msg or "protected" in msg:
+                    password = input("   🔒 Akun dilindungi 2FA. Masukkan Password Cloud Anda: ").strip()
                     await client.sign_in(password=password)
                 else:
-                    raise e
+                    raise login_err
+                    
             print(f"   ✅ Login sukses! File '{nama_file}' diperbarui.")
 
         # Ambil query token untuk game
         bot_entity = await client.get_entity(TARGET_BOT)
         bot_peer = await client.get_input_entity(bot_entity)
-          
+
         web_view = await client(RequestWebViewRequest(  
             peer=bot_peer, bot=bot_peer, platform="android",  
             from_bot_menu=False, url=TARGET_URL, start_param=START_PARAM  
         ))  
-          
+
         parsed_url = urllib.parse.unquote(web_view.url)
-        await client.disconnect() # Disconnect setelah selesai mengambil token
-        
+        await client.disconnect() 
+
         if "#tgWebAppData=" in parsed_url:  
             return parsed_url.split("#tgWebAppData=")[1].split("&tgWebAppVersion")[0]  
         elif "?tgWebAppData=" in parsed_url:  
             return parsed_url.split("?tgWebAppData=")[1].split("&tgWebAppVersion")[0]  
-            
+
     except Exception as e:  
         print(f"   ❌ Gagal memproses session {nama_session}: {e}")
         try: await client.disconnect()
         except: pass
         
-        if not butuh_clean and os.path.exists(nama_file):
-            print("   🔄 Database macet? Mencoba memurnikan database dan ulang...")
-            return await ambil_atau_login_telethon(nama_session, butuh_clean=True)
+        # PENGAMAN UTAMA: Jika gagal karena salah password atau masalah login, 
+        # HAPUS file rusak agar tidak memicu eror 'expected 6, got 5' pada loop berikutnya
+        if os.path.exists(nama_file):
+            try:
+                os.remove(nama_file)
+                print(f"   🧹 File session rusak '{nama_file}' telah dibersihkan.")
+            except: pass
+            
     return None
 
 # =====================================================================
